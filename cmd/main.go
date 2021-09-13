@@ -4,9 +4,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"log"
 	"mockidoki/config"
-	"mockidoki/internal/message"
 	"mockidoki/internal/repository"
 	"mockidoki/internal/service"
+	message2 "mockidoki/pkg/message"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	kafkaConfig := configurationManager.GetKafkaConfig()
 
 	actionRepository := repository.NewActionRepository(postgresConfig)
-	kafkaProducer := message.NewKafkaProducer(kafkaConfig)
+	kafkaProducer := message2.NewKafkaProducer(kafkaConfig)
 	actionService := service.NewActionService(*actionRepository, *kafkaProducer)
 
 	e.POST("/actions", actionService.Process)

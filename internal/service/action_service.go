@@ -3,17 +3,17 @@ package service
 import (
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
-	"mockidoki/internal/message"
 	"mockidoki/internal/repository"
+	message2 "mockidoki/pkg/message"
 	"net/http"
 )
 
 type ActionService struct {
 	Repo          repository.ActionRepository
-	KafkaProducer message.KafkaProducer
+	KafkaProducer message2.KafkaProducer
 }
 
-func NewActionService(repository repository.ActionRepository, kafkaProducer message.KafkaProducer) *ActionService {
+func NewActionService(repository repository.ActionRepository, kafkaProducer message2.KafkaProducer) *ActionService {
 	return &ActionService{Repo: repository, KafkaProducer: kafkaProducer}
 }
 
