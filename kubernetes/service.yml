@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${CI_PROJECT_NAME}-job
+  namespace: orange
+  labels:
+    app: ${CI_PROJECT_NAME}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+      nodePort: 30056
+  selector:
+    app: ${CI_PROJECT_NAME}
