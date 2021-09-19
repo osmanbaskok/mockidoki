@@ -1,44 +1,78 @@
 package service
 
 import (
-	"github.com/labstack/echo/v4"
+	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"mockidoki/internal/repository"
-	message2 "mockidoki/pkg/message"
+	"mockidoki/pkg/httpservice"
+	"mockidoki/pkg/messagebus"
 	"net/http"
 )
 
 type ActionService struct {
-	Repo          repository.ActionRepository
-	KafkaProducer message2.KafkaProducer
+	repo          repository.ActionRepository
+	kafkaProducer messagebus.KafkaProducer
+	httpResponse  httpservice.Response
 }
 
-func NewActionService(repository repository.ActionRepository, kafkaProducer message2.KafkaProducer) *ActionService {
-	return &ActionService{Repo: repository, KafkaProducer: kafkaProducer}
+func NewActionService(repository repository.ActionRepository, kafkaProducer messagebus.KafkaProducer, httpResponse httpservice.Response) *ActionService {
+	return &ActionService{repo: repository, kafkaProducer: kafkaProducer, httpResponse: httpResponse}
 }
 
-func (service *ActionService) Process(c echo.Context) error {
+func (service *ActionService) Process(writer http.ResponseWriter, request *http.Request) {
+	response := service.httpResponse
 
-	actionKey := c.Request().Header.Get("Action-Key")
-
-	eventChannel := service.Repo.FindEventChannelByKey(actionKey)
-
-	if eventChannel == nil {
-		return c.JSON(http.StatusBadRequest, "Channel not found")
+	vars := mux.Vars(request)
+	key, ok := vars["key"]
+	if !ok {
+		response.RespondWithError(writer, http.StatusNotFound, "Missing key parameter")
+		return
 	}
 
-	messageBytes, err := ioutil.ReadAll(c.Request().Body)
+	eventChannel, err := service.repo.FindEventChannelByKey(key)
+
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Request body could not be read")
+		response.RespondWithError(writer, http.StatusBadRequest, "Channel not found")
+		return
+	}
+
+	messageBytes, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "Request could not be read")
+		return
 	}
 
 	eventMessage := string(messageBytes)
 
-	err = service.KafkaProducer.Produce(eventMessage, *eventChannel)
+	err = service.kafkaProducer.Produce(eventMessage, *eventChannel)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Event message could not be sent")
+		response.RespondWithError(writer, http.StatusBadRequest, "Event messagebus could not be sent")
+		return
 	}
 
-	return c.NoContent(http.StatusOK)
+	writer.WriteHeader(http.StatusOK)
+	return
+}
+
+func (service *ActionService) Create(writer http.ResponseWriter, request *http.Request) {
+
+	response := service.httpResponse
+
+	var actionRequest ActionRequest
+	decoder := json.NewDecoder(request.Body)
+	if err := decoder.Decode(&actionRequest); err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "Request could not be read")
+		return
+	}
+	defer request.Body.Close()
+
+	err := service.repo.Save(actionRequest.ToDao())
+	if err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "An error occurred when saving request")
+		return
+	}
+
+	response.RespondWithJSON(writer, http.StatusCreated, nil)
 }

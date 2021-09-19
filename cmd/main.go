@@ -1,36 +1,39 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gorilla/mux"
 	"log"
 	"mockidoki/config"
 	"mockidoki/internal/repository"
 	"mockidoki/internal/service"
-	message2 "mockidoki/pkg/message"
+	"mockidoki/pkg/httpservice"
+	"mockidoki/pkg/messagebus"
+	"net/http"
 )
 
 func main() {
+	router := mux.NewRouter()
 
-	e := echo.New()
 	configurationManager := config.NewConfigurationManager("config/config.yml", "local")
 	postgresConfig := configurationManager.GetPostgresConfig()
 	kafkaConfig := configurationManager.GetKafkaConfig()
 
 	actionRepository := repository.NewActionRepository(postgresConfig)
-	kafkaProducer := message2.NewKafkaProducer(kafkaConfig)
-	actionService := service.NewActionService(*actionRepository, *kafkaProducer)
+	kafkaProducer := messagebus.NewKafkaProducer(kafkaConfig)
+	response := new(httpservice.Response)
+	actionService := service.NewActionService(*actionRepository, *kafkaProducer, *response)
 
-	e.POST("/actions", actionService.Process)
-	e.GET("/management/health", func(c echo.Context) error {
-		c.Response().WriteHeader(200)
-		c.Response().Header().Set("Content-Type", "application/json")
-		_, _ = c.Response().Write([]byte(`{"status": "ok"}`))
-		return nil
-	})
+	router.HandleFunc("/actions/{key}/process", actionService.Process).Methods("POST")
+	router.HandleFunc("/actions", actionService.Create).Methods("POST")
+	router.HandleFunc("/management/health", func(writer http.ResponseWriter, request *http.Request) {
+		payload := map[string]interface{}{"status": "ok"}
+		response.RespondWithJSON(writer, http.StatusOK, payload)
+	}).Methods("GET")
 
 	port := configurationManager.GetServerConfig().Port
-	err := e.Start(":" + port)
+	err := http.ListenAndServe(":"+port, router)
+
 	if err != nil {
-		log.Fatalf("Error when connecting db : %s", err.Error())
+		log.Fatalf("Error when running the application : %s", err.Error())
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	"log"
 	"mockidoki/config"
 )
@@ -12,22 +13,44 @@ type ActionRepository struct {
 	connection string
 }
 
-func (p *ActionRepository) FindEventChannelByKey(key string) *string {
-	db, err := sql.Open("postgres", p.connection)
+func (repo *ActionRepository) Save(dao ActionDao) error {
+	db, err := sql.Open("postgres", repo.connection)
 	defer db.Close()
 
 	if err != nil {
 		log.Fatalf("Error when connecting db : %s", err.Error())
-		return nil
+		return err
 	}
 
-	query := fmt.Sprintf("select channel from events where is_deleted = false and key = '%s'", key)
+	query := fmt.Sprintf("insert into action (key, channel, description, is_deleted) "+
+		"values('%s','%s','%s','%t')", dao.Key, dao.Channel, dao.Description, dao.IsDeleted)
+
+	_, err = db.Exec(query)
+
+	if err != nil {
+		log.Fatalf("Error when running insert query : %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error) {
+	db, err := sql.Open("postgres", repo.connection)
+	defer db.Close()
+
+	if err != nil {
+		log.Fatalf("Error when connecting db : %s", err.Error())
+		return nil, err
+	}
+
+	query := fmt.Sprintf("select channel from action where is_deleted = false and key = '%s'", key)
 
 	data, err := db.Query(query)
 
 	if err != nil {
 		log.Fatalf("Error when running query : %s", err.Error())
-		return nil
+		return nil, err
 	}
 
 	if data.Next() {
@@ -36,13 +59,13 @@ func (p *ActionRepository) FindEventChannelByKey(key string) *string {
 		err = data.Scan(&channel)
 		if err != nil {
 			log.Fatalf("Error when scanning data : %s", err.Error())
-			return nil
+			return nil, err
 		}
 
-		return &channel
+		return &channel, nil
 	}
 
-	return nil
+	return nil, errors.New("No record found!")
 }
 
 func NewActionRepository(config config.PostgresConfig) *ActionRepository {
