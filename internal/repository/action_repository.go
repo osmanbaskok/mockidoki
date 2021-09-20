@@ -19,7 +19,6 @@ func (repo *ActionRepository) Save(dao ActionDao) error {
 
 	if err != nil {
 		log.Fatalf("Error when connecting db : %s", err.Error())
-		return err
 	}
 
 	query := fmt.Sprintf("insert into action (key, channel, description, is_deleted) "+
@@ -28,7 +27,6 @@ func (repo *ActionRepository) Save(dao ActionDao) error {
 	_, err = db.Exec(query)
 
 	if err != nil {
-		log.Fatalf("Error when running insert query : %s", err.Error())
 		return err
 	}
 
@@ -41,7 +39,6 @@ func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error)
 
 	if err != nil {
 		log.Fatalf("Error when connecting db : %s", err.Error())
-		return nil, err
 	}
 
 	query := fmt.Sprintf("select channel from action where is_deleted = false and key = '%s'", key)
@@ -50,7 +47,6 @@ func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error)
 
 	if err != nil {
 		log.Fatalf("Error when running query : %s", err.Error())
-		return nil, err
 	}
 
 	if data.Next() {
@@ -59,7 +55,6 @@ func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error)
 		err = data.Scan(&channel)
 		if err != nil {
 			log.Fatalf("Error when scanning data : %s", err.Error())
-			return nil, err
 		}
 
 		return &channel, nil

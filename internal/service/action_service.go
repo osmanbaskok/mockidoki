@@ -70,7 +70,7 @@ func (service *ActionService) Create(writer http.ResponseWriter, request *http.R
 
 	err := service.repo.Save(actionRequest.ToDao())
 	if err != nil {
-		response.RespondWithError(writer, http.StatusBadRequest, "An error occurred when saving request")
+		response.RespondWithError(writer, http.StatusInternalServerError, "An error occurred when saving request. ["+err.Error()+"]")
 		return
 	}
 

@@ -8,5 +8,5 @@ local:
     password:  "postgres"
     name: "mockidoki"
   kafka:
-    broker: test-infra-service.svc.dev-1-hq:9092
+    broker: localhost:9092
 
