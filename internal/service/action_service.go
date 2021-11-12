@@ -21,39 +21,77 @@ func NewActionService(repository repository.ActionRepository, kafkaProducer mess
 }
 
 func (service *ActionService) Process(writer http.ResponseWriter, request *http.Request) {
+	eventChannel, messageBytes, halt := getChannelAndMessageAsBytes(writer, request, service)
+
+	if halt {
+		return
+	}
+
+	eventMessage := string(messageBytes)
+
+	err := service.kafkaProducer.Produce(eventMessage, *eventChannel)
+
+	response := service.httpResponse
+	if err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "Event eventMessage could not be sent")
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	return
+}
+
+func (service *ActionService) ProcessList(writer http.ResponseWriter, request *http.Request) {
+	eventChannel, messageBytes, halt := getChannelAndMessageAsBytes(writer, request, service)
+
+	if halt {
+		return
+	}
+
+	response := service.httpResponse
+	var list []interface{}
+	if err := json.Unmarshal(messageBytes, &list); err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "Request could not be parsed")
+		return
+	}
+
+	for _, message := range list {
+		eventMessage, _ := json.Marshal(message)
+		err := service.kafkaProducer.Produce(string(eventMessage), *eventChannel)
+
+		if err != nil {
+			response.RespondWithError(writer, http.StatusBadRequest, "Event message could not be sent")
+			return
+		}
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	return
+}
+
+func getChannelAndMessageAsBytes(writer http.ResponseWriter, request *http.Request, service *ActionService) (*string, []byte, bool) {
 	response := service.httpResponse
 
 	vars := mux.Vars(request)
 	key, ok := vars["key"]
 	if !ok {
 		response.RespondWithError(writer, http.StatusNotFound, "Missing key parameter")
-		return
+		return nil, nil, true
 	}
 
 	eventChannel, err := service.repo.FindEventChannelByKey(key)
 
 	if err != nil {
 		response.RespondWithError(writer, http.StatusBadRequest, "Channel not found")
-		return
+		return nil, nil, true
 	}
 
 	messageBytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		response.RespondWithError(writer, http.StatusBadRequest, "Request could not be read")
-		return
+		return nil, nil, true
 	}
-
-	eventMessage := string(messageBytes)
-
-	err = service.kafkaProducer.Produce(eventMessage, *eventChannel)
-
-	if err != nil {
-		response.RespondWithError(writer, http.StatusBadRequest, "Event messagebus could not be sent")
-		return
-	}
-
-	writer.WriteHeader(http.StatusOK)
-	return
+	return eventChannel, messageBytes, false
 }
 
 func (service *ActionService) Create(writer http.ResponseWriter, request *http.Request) {

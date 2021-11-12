@@ -24,6 +24,7 @@ func main() {
 	actionService := service.NewActionService(*actionRepository, *kafkaProducer, *response)
 
 	router.HandleFunc("/actions/{key}/process", actionService.Process).Methods("POST")
+	router.HandleFunc("/actions/{key}/process-list", actionService.ProcessList).Methods("POST")
 	router.HandleFunc("/actions", actionService.Create).Methods("POST")
 	router.HandleFunc("/management/health", func(writer http.ResponseWriter, request *http.Request) {
 		payload := map[string]interface{}{"status": "ok"}
