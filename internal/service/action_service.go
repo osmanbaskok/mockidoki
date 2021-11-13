@@ -27,9 +27,7 @@ func (service *ActionService) Process(writer http.ResponseWriter, request *http.
 		return
 	}
 
-	eventMessage := string(messageBytes)
-
-	err := service.kafkaProducer.Produce(eventMessage, *eventChannel)
+	err := service.kafkaProducer.Produce(messageBytes, *eventChannel)
 
 	response := service.httpResponse
 	if err != nil {
@@ -55,14 +53,11 @@ func (service *ActionService) ProcessList(writer http.ResponseWriter, request *h
 		return
 	}
 
-	for _, message := range list {
-		eventMessage, _ := json.Marshal(message)
-		err := service.kafkaProducer.Produce(string(eventMessage), *eventChannel)
+	err := service.kafkaProducer.ProduceList(list, *eventChannel)
 
-		if err != nil {
-			response.RespondWithError(writer, http.StatusBadRequest, "Event message could not be sent")
-			return
-		}
+	if err != nil {
+		response.RespondWithError(writer, http.StatusBadRequest, "Event message could not be sent")
+		return
 	}
 
 	writer.WriteHeader(http.StatusOK)
