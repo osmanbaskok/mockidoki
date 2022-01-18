@@ -3,6 +3,7 @@ module mockidoki
 go 1.13
 
 require (
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/klauspost/compress v1.13.5 // indirect

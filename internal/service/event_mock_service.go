@@ -10,17 +10,17 @@ import (
 	"net/http"
 )
 
-type ActionService struct {
-	repo          repository.ActionRepository
+type EventMockService struct {
+	repo          repository.EventMockRepository
 	kafkaProducer messagebus.KafkaProducer
 	httpResponse  httpservice.Response
 }
 
-func NewActionService(repository repository.ActionRepository, kafkaProducer messagebus.KafkaProducer, httpResponse httpservice.Response) *ActionService {
-	return &ActionService{repo: repository, kafkaProducer: kafkaProducer, httpResponse: httpResponse}
+func NewEventMockService(repository repository.EventMockRepository, kafkaProducer messagebus.KafkaProducer, httpResponse httpservice.Response) *EventMockService {
+	return &EventMockService{repo: repository, kafkaProducer: kafkaProducer, httpResponse: httpResponse}
 }
 
-func (service *ActionService) Process(writer http.ResponseWriter, request *http.Request) {
+func (service *EventMockService) Process(writer http.ResponseWriter, request *http.Request) {
 	eventChannel, messageBytes, halt := getChannelAndMessageAsBytes(writer, request, service)
 
 	if halt {
@@ -39,7 +39,7 @@ func (service *ActionService) Process(writer http.ResponseWriter, request *http.
 	return
 }
 
-func (service *ActionService) ProcessList(writer http.ResponseWriter, request *http.Request) {
+func (service *EventMockService) ProcessList(writer http.ResponseWriter, request *http.Request) {
 	eventChannel, messageBytes, halt := getChannelAndMessageAsBytes(writer, request, service)
 
 	if halt {
@@ -64,7 +64,7 @@ func (service *ActionService) ProcessList(writer http.ResponseWriter, request *h
 	return
 }
 
-func getChannelAndMessageAsBytes(writer http.ResponseWriter, request *http.Request, service *ActionService) (*string, []byte, bool) {
+func getChannelAndMessageAsBytes(writer http.ResponseWriter, request *http.Request, service *EventMockService) (*string, []byte, bool) {
 	response := service.httpResponse
 
 	vars := mux.Vars(request)
@@ -89,19 +89,19 @@ func getChannelAndMessageAsBytes(writer http.ResponseWriter, request *http.Reque
 	return eventChannel, messageBytes, false
 }
 
-func (service *ActionService) Create(writer http.ResponseWriter, request *http.Request) {
+func (service *EventMockService) Create(writer http.ResponseWriter, request *http.Request) {
 
 	response := service.httpResponse
 
-	var actionRequest ActionRequest
+	var eventMockRequest EventMockRequest
 	decoder := json.NewDecoder(request.Body)
-	if err := decoder.Decode(&actionRequest); err != nil {
+	if err := decoder.Decode(&eventMockRequest); err != nil {
 		response.RespondWithError(writer, http.StatusBadRequest, "Request could not be read")
 		return
 	}
 	defer request.Body.Close()
 
-	err := service.repo.Save(actionRequest.ToDao())
+	err := service.repo.Save(eventMockRequest.ToDao())
 	if err != nil {
 		response.RespondWithError(writer, http.StatusInternalServerError, "An error occurred when saving request. ["+err.Error()+"]")
 		return

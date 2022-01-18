@@ -9,11 +9,11 @@ import (
 	"mockidoki/config"
 )
 
-type ActionRepository struct {
+type EventMockRepository struct {
 	connection string
 }
 
-func (repo *ActionRepository) Save(dao ActionDao) error {
+func (repo *EventMockRepository) Save(dao EventMockDao) error {
 	db, err := sql.Open("postgres", repo.connection)
 	defer db.Close()
 
@@ -21,7 +21,7 @@ func (repo *ActionRepository) Save(dao ActionDao) error {
 		log.Fatalf("Error when connecting db : %s", err.Error())
 	}
 
-	query := fmt.Sprintf("insert into action (key, channel, description, is_deleted) "+
+	query := fmt.Sprintf("insert into event_mock (key, channel, description, is_deleted) "+
 		"values('%s','%s','%s','%t')", dao.Key, dao.Channel, dao.Description, dao.IsDeleted)
 
 	_, err = db.Exec(query)
@@ -33,7 +33,7 @@ func (repo *ActionRepository) Save(dao ActionDao) error {
 	return nil
 }
 
-func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error) {
+func (repo *EventMockRepository) FindEventChannelByKey(key string) (*string, error) {
 	db, err := sql.Open("postgres", repo.connection)
 	defer db.Close()
 
@@ -41,7 +41,7 @@ func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error)
 		log.Fatalf("Error when connecting db : %s", err.Error())
 	}
 
-	query := fmt.Sprintf("select channel from action where is_deleted = false and key = '%s'", key)
+	query := fmt.Sprintf("select channel from event_mock where is_deleted = false and key = '%s'", key)
 
 	data, err := db.Query(query)
 
@@ -63,9 +63,9 @@ func (repo *ActionRepository) FindEventChannelByKey(key string) (*string, error)
 	return nil, errors.New("No record found!")
 }
 
-func NewActionRepository(config config.PostgresConfig) *ActionRepository {
+func NewEventMockRepository(config config.PostgresConfig) *EventMockRepository {
 	connection := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Name)
-	return &ActionRepository{connection: connection}
+	return &EventMockRepository{connection: connection}
 }

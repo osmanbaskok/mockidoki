@@ -1,6 +1,6 @@
 package repository
 
-type ActionDao struct {
+type EventMockDao struct {
 	Id          int    `json:"id"`
 	Key         string `json:"key"`
 	Channel     string `json:"channel"`

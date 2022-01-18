@@ -18,14 +18,18 @@ func main() {
 	postgresConfig := configurationManager.GetPostgresConfig()
 	kafkaConfig := configurationManager.GetKafkaConfig()
 
-	actionRepository := repository.NewActionRepository(postgresConfig)
+	eventMockRepository := repository.NewEventMockRepository(postgresConfig)
+	httpActionRepository := repository.NewHttpMockRepository(postgresConfig)
 	kafkaProducer := messagebus.NewKafkaProducer(kafkaConfig)
 	response := new(httpservice.Response)
-	actionService := service.NewActionService(*actionRepository, *kafkaProducer, *response)
+	actionService := service.NewEventMockService(*eventMockRepository, *kafkaProducer, *response)
+	httpActionService := service.NewHttpMockService(*httpActionRepository, *response)
 
-	router.HandleFunc("/actions/{key}/process", actionService.Process).Methods("POST")
-	router.HandleFunc("/actions/{key}/process-list", actionService.ProcessList).Methods("POST")
-	router.HandleFunc("/actions", actionService.Create).Methods("POST")
+	router.HandleFunc("/http-mocks", httpActionService.Process).Methods("POST")
+	router.HandleFunc("/http-mocks", httpActionService.Process).Methods("GET")
+	router.HandleFunc("/event-mocks/{key}/process", actionService.Process).Methods("POST")
+	router.HandleFunc("/event-mocks/{key}/process-list", actionService.ProcessList).Methods("POST")
+	router.HandleFunc("/mocks", actionService.Create).Methods("POST")
 	router.HandleFunc("/management/health", func(writer http.ResponseWriter, request *http.Request) {
 		payload := map[string]interface{}{"status": "ok"}
 		response.RespondWithJSON(writer, http.StatusOK, payload)

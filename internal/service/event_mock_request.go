@@ -2,15 +2,15 @@ package service
 
 import "mockidoki/internal/repository"
 
-type ActionRequest struct {
+type EventMockRequest struct {
 	Key         string `json:"key"`
 	Channel     string `json:"channel"`
 	Description string `json:"description"`
 }
 
-func (request *ActionRequest) ToDao() repository.ActionDao {
+func (request *EventMockRequest) ToDao() repository.EventMockDao {
 
-	return repository.ActionDao{
+	return repository.EventMockDao{
 		Key:         request.Key,
 		Channel:     request.Channel,
 		Description: request.Description,
