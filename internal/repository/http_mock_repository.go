@@ -35,14 +35,14 @@ func (repo *HttpMockRepository) Find(method string, fullUrl string, header strin
 	}
 
 	if data.Next() {
-		var httpActionDao HttpMockDao
-		err = data.Scan(&httpActionDao.Id, &httpActionDao.Method, &httpActionDao.MatchingUrl, &httpActionDao.MatchingBody, &httpActionDao.MatchingHeader,
-			&httpActionDao.ResponseStatus, &httpActionDao.ResponseBody, &httpActionDao.ResponseHeader)
+		var httpMockDao HttpMockDao
+		err = data.Scan(&httpMockDao.Id, &httpMockDao.Method, &httpMockDao.MatchingUrl, &httpMockDao.MatchingBody, &httpMockDao.MatchingHeader,
+			&httpMockDao.ResponseStatus, &httpMockDao.ResponseBody, &httpMockDao.ResponseHeader)
 		if err != nil {
 			log.Fatalf("Error when scanning data : %s", err.Error())
 		}
 
-		return &httpActionDao, nil
+		return &httpMockDao, nil
 	}
 
 	return nil, errors.New("No record found!")

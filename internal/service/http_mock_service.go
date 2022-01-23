@@ -41,18 +41,18 @@ func getHttpMock(writer http.ResponseWriter, request *http.Request, service *Htt
 	body, err := ioutil.ReadAll(request.Body)
 	defer request.Body.Close()
 	if err != nil {
-		response.RespondWithError(writer, http.StatusInternalServerError, "Http Action body cannot be parsed")
+		response.RespondWithError(writer, http.StatusInternalServerError, "Http mock body cannot be parsed")
 		return nil, true
 	}
 
-	httpAction, err := service.repo.Find(request.Method, fullUrl, getAllRequestHeaderValues(request), string(body))
+	httpMock, err := service.repo.Find(request.Method, fullUrl, getAllRequestHeaderValues(request), string(body))
 
 	if err != nil {
-		response.RespondWithError(writer, http.StatusBadRequest, "Http Action not found")
+		response.RespondWithError(writer, http.StatusNotFound, "Http mock not found")
 		return nil, true
 	}
 
-	return httpAction, false
+	return httpMock, false
 }
 
 func getAllRequestHeaderValues(request *http.Request) string {

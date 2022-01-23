@@ -77,7 +77,7 @@ func getChannelAndMessageAsBytes(writer http.ResponseWriter, request *http.Reque
 	eventChannel, err := service.repo.FindEventChannelByKey(key)
 
 	if err != nil {
-		response.RespondWithError(writer, http.StatusBadRequest, "Channel not found")
+		response.RespondWithError(writer, http.StatusNotFound, "Event mock not found")
 		return nil, nil, true
 	}
 
