@@ -21,12 +21,13 @@ func (repo *HttpMockRepository) Find(method string, fullUrl string, header strin
 		log.Fatalf("Error when connecting db : %s", err.Error())
 	}
 
-	query := fmt.Sprintf("select id, method, coalesce(matching_url, '') matching_url, coalesce(matching_body, '') matching_body, coalesce(matching_header, '') matching_header, "+
-		"response_status, coalesce(response_body, '') response_body, response_header"+
-		" from http_mock where is_deleted = false and method = '%s'"+
-		" and (matching_url is null or position(matching_url in '%s') > 0)"+
-		" and (matching_header is null or position(matching_header in '%s') > 0)"+
-		" and (matching_body is null or position(matching_body in '%s') > 0)", method, fullUrl, header, body)
+	query := fmt.Sprintf("select id, method, matching_url, matching_body, matching_header, response_status, response_body, response_header from" +
+		" (select id, method, coalesce(matching_url, '') matching_url, coalesce(matching_body, '') matching_body, coalesce(matching_header, '') matching_header, "+
+		"response_status, coalesce(response_body, '') response_body, coalesce(response_header, '[]') response_header,"+
+		" REGEXP_MATCHES('%s', coalesce(matching_url, '')),"+
+		" REGEXP_MATCHES('%s', coalesce(matching_body, '')),"+
+		" REGEXP_MATCHES('%s', coalesce(matching_header,''))"+
+		" from http_mock where is_deleted = false and method = '%s') mock", fullUrl, body, header, method)
 
 	data, err := db.Query(query)
 

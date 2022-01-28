@@ -10,7 +10,7 @@ create if not exists table event_mock
 );
 
 create if not exists unique index event_mock_unique_key
-	on action (key);
+	on event_mock (key);
 
 create if not exists table http_mock
 (
