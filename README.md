@@ -18,7 +18,7 @@ Run docker compose and get Postgres DB up
 Run the following command in the root directory
 * go run main.go
 
-#####HTTP mock example:
+###### HTTP mock example:
 * Run the following Curl script 
 ````  
 curl -v --location --request POST 'http://localhost:8080/http-mocks/warehouses/3/stock-transactions' \
