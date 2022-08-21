@@ -9,22 +9,3 @@ type HttpMockRequest struct {
 	ResponseStatus int    `json:"responseStatus"`
 	Description    string `json:"description"`
 }
-
-//func (request *HttpMockRequest) ToDao() repository.HttpMockDao {
-//
-//	responseHeader, err := json.Marshal(request.ResponseHeader)
-//
-//	if err != nil {
-//		log.Fatalf("Error when converting response header into json: %s", err.Error())
-//	}
-//
-//	return repository.HttpMockDao{
-//		MatchingHeader: request.MatchingHeader,
-//		MatchingUrl:    request.MatchingUrl,
-//		ResponseBody:   request.ResponseBody,
-//		ResponseHeader: responseHeader,
-//		ResponseStatus: request.ResponseStatus,
-//		Description:    request.Description,
-//		IsDeleted:      false,
-//	}
-//}

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"github.com/gorilla/mux"
@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func Start() {
 	router := mux.NewRouter()
 
 	configurationManager := config.NewConfigurationManager("config/config.yml", "local")
