@@ -60,7 +60,7 @@ curl --location --request POST 'http://localhost:8080/event-mocks/stock-created/
 kafka-console-consumer --bootstrap-server localhost:29092 --topic my-mockidoki-topic --from-beginning
 ````  
 
-PS: You can also post an array of messages at once to the given API endpoint (http://localhost:8080/event-mocks/{key}}/process-list). They will still be published as a single message on the specified topic.
+PS: You can also post an array of messages at once to the given API endpoint (http://localhost:8080/event-mocks/{key}/process-list). They will still be published as a single message on the specified topic.
 
 ### Dependencies
 
